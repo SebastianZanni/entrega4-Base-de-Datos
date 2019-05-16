@@ -33,7 +33,9 @@ while True:
             print("\nIniciaste sesion exitosamente con el usuario:", usuario)
 
             while True:
-                cur.execute('SELECT nombreperfil FROM Perfiles WHERE idusuario=%s', (usuario,))
+                existe = 'Existe'
+                noExiste = 'Eliminado'
+                cur.execute('SELECT nombreperfil FROM Perfiles WHERE idusuario=%s AND Existe=%s', (usuario,existe))
                 cont2 = cur.fetchall()
                 print("Los perfiles disponibles son: ")
 
@@ -61,13 +63,84 @@ while True:
                         try:
                             valEleccion= int(eleccion)
 
-
                             if (valEleccion==1):
                                 continue
                             elif (valEleccion==2):
                                 continue
                             elif(valEleccion==3):
+                                cur.execute('SELECT codigo_contenido FROM favoritos WHERE nombre_perfil=%s',
+                                            (perfilElegido,))
+                                favoritos=cur.fetchall()
+
+                                print("Los contenidos favoritos de este perfil son:")
+                                for favorito in favoritos:
+                                    print(favorito[0])
+
+                                while True:
+                                    print('\n[1] Agregar Favorito\n'
+                                          '[2] Eliminar Favorito\n')
+
+                                    eleccionFav=input('Que deseas hacer: ')
+
+                                    try:
+                                        eleccionFav=int(eleccionFav)
+
+                                        if eleccionFav==1:
+                                            cur.execute('SELECT c.codigo FROM contenido c WHERE c.codigo NOT IN (SELECT f.codigo_contenido FROM Favoritos f WHERE f.nombre_perfil=%s)',
+                                                        (perfilElegido,))
+                                            noFavoritos= cur.fetchall()
+
+                                            while True:
+                                                print("Todo los contenidos que no tienes en tus favoritos son: ")
+                                                lista=[]
+
+                                                for nofavorito in noFavoritos:
+                                                    lista.append(nofavorito[0])
+                                                    print(nofavorito[0])
+
+                                                favoritoNuevo= input("\nCual deseas ingresar a tu lista de favoritos:  ")
+
+                                                if favoritoNuevo in lista:
+                                                    cur.execute('INSERT INTO Favoritos(nombre_perfil,codigo_contenido)'
+                                                                'VALUES (%s,%s)',(perfilElegido,favoritoNuevo))
+                                                    conn.commit()
+                                                    print("Se ha agregado con exito tu nuevo favorito\n")
+                                                    break
+                                                else:
+                                                    print("El contenido que ingresaste ya esta en tu lista de favoritos o no existe, intentalo nuevamente\n")
+                                                    continue
+
+                                        elif eleccionFav==2:
+
+                                            while True:
+                                                cur.execute('SELECT codigo_contenido FROM favoritos WHERE nombre_perfil=%s',
+                                                            (perfilElegido,))
+                                                favoritos = cur.fetchall()
+
+                                                print("Los contenidos favoritos de este perfil son:")
+                                                lista2=[]
+                                                for favorito in favoritos:
+                                                    lista2.append(favorito[0])
+                                                    print(favorito[0])
+
+                                                eliminarFav=input("Cual de estos contenidos deseas eliminar de tu lista de contenidos: ")
+
+                                                if eliminarFav in lista2:
+                                                    cur.execute('DELETE FROM favoritos WHERE nombre_perfil=%s AND codigo_contenido=%s',
+                                                                (perfilElegido,eliminarFav))
+                                                    conn.commit()
+                                                    print("Se ha eliminado con exito el contenido de tu lista de favoritos\n")
+                                                    break
+                                                else:
+                                                    print("El contenido que quieres borrar no se encuentra en tu lista de favoritos, intentalo denuevo\n")
+                                                    continue
+
+                                    except ValueError:
+                                        print("La opcion ingresada no es valida, intentalo nuevamente")
+                                        continue
+                                    break
                                 continue
+
                             elif(valEleccion==4):
                                 continue
                             elif(valEleccion==5):
@@ -84,26 +157,48 @@ while True:
                                         break
 
                                     elif(valAccion==2):
-
-                                        nombrePerfil= input("Ingrese el nombre de su nuevo perfil: ")
-
                                         while True:
-                                            edad= input("Ingrese su edad")
-                                            try:
-                                                edad=int(edad)
+                                            nombrePerfil= input("Ingrese el nombre de su nuevo perfil: ")
+
+                                            while True:
+                                                edad= input("Ingrese su edad")
+                                                try:
+                                                    edad=int(edad)
+                                                    break
+
+                                                except ValueError:
+                                                    print("Tienes que ingresar numeros")
+                                                    continue
+
+                                            cur.execute(
+                                                'SELECT exists (SELECT 1 FROM Perfiles WHERE nombreperfil = %s AND Existe=%s LIMIT 1)',
+                                                (nombrePerfil, noExiste))
+                                            validacion = cur.fetchone()
+
+                                            if validacion[0]==True:
+                                                cur.execute('UPDATE Perfiles SET Existe=%s WHERE nombreperfil=%s',(existe,nombrePerfil))
+                                                print('\nYa existia un perfil con este nombre pero hania sido eliminado ')
                                                 break
 
-                                            except ValueError:
-                                                print("Tienes que ingresar numeros")
+                                            cur.execute('SELECT exists (SELECT 1 FROM Perfiles WHERE nombreperfil = %s AND Existe=%s LIMIT 1)',
+                                                (nombrePerfil,existe ))
+                                            validacion2 = cur.fetchone()
+
+                                            if validacion2[0]==True:
+                                                print("\nYa existe un perfil con este nombre, intentalo nuevamente\n")
                                                 continue
 
-                                        cur.execute(
-                                            'INSERT INTO Perfiles(nombreperfil,idusuario,edad)'
-                                            'VALUES (%s,%s,%s)',(nombrePerfil,usuario,edad))
-                                        conn.commit()
-                                        print("\nEl perfil ha sido creado con exito!!!!\n")
-                                        continue
+                                            cur.execute('SELECT exists (SELECT 1 FROM Perfiles WHERE nombreperfil = %s  LIMIT 1)',
+                                                        (nombrePerfil,))
+                                            validacion3=cur.fetchone()
 
+                                            if validacion3[0]==False:
+                                                cur.execute(
+                                                    'INSERT INTO Perfiles(nombreperfil,idusuario,edad,existe)'
+                                                    'VALUES (%s,%s,%s,%s)', (nombrePerfil, usuario, edad, existe))
+                                                conn.commit()
+                                                print("\nEl perfil ha sido creado con exito!!!!\n")
+                                                break
 
                                     elif(valAccion==3):
                                         nuevoNombrePerfil=input("Ingresa el nuevo nombre de este perfil: ")
@@ -133,17 +228,18 @@ while True:
                                                             "Cual es tu respuesta ( no hay marcha atras ): ")
                                             try:
                                                 respuesta=int(respuesta)
+
                                                 if respuesta==1:
                                                     cur.execute('DELETE FROM Historial WHERE nombre_perfil=%s',(perfilElegido,))
                                                     conn.commit()
                                                     cur.execute('DELETE FROM Favoritos WHERE nombre_perfil=%s',(perfilElegido,))
                                                     conn.commit()
-                                                    cur.execute('DELETE FROM Perfiles WHERE nombreperfil=%s ',
-                                                                (perfilElegido,))
+                                                    cur.execute('UPDATE Perfiles SET Existe=%s WHERE nombreperfil=%s ',
+                                                                (noExiste,perfilElegido))
                                                     conn.commit()
 
-                                                    print("Se ha borrado con exito la informacion y las acciones del perfil")
-                                                    continue
+                                                    print("\nSe ha borrado con exito la informacion y las acciones del perfil")
+                                                    break
                                                 else:
                                                     break
                                             except ValueError:
@@ -155,7 +251,6 @@ while True:
                                     print("\nLa opcion ingresada no es valida, intentalo nuevamente\n")
 
                             elif (valEleccion == 6):
-                                input("\nPresiona ENTER para volver al menu principal\n")
                                 break
 
                             else:
