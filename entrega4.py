@@ -33,7 +33,9 @@ while True:
             print("\nIniciaste sesion exitosamente con el usuario:", usuario)
 
             while True:
-                cur.execute('SELECT nombreperfil FROM Perfiles WHERE idusuario=%s', (usuario,))
+                existe = 'Existe'
+                noExiste = 'Eliminado'
+                cur.execute('SELECT nombreperfil FROM Perfiles WHERE idusuario=%s AND Existe=%s', (usuario,existe))
                 cont2 = cur.fetchall()
                 print("Los perfiles disponibles son: ")
 
@@ -61,94 +63,174 @@ while True:
                         try:
                             valEleccion= int(eleccion)
 
-
                             if (valEleccion==1):
-                                cur.execute('SELECT codigo_contenido FROM visto WHERE nombre_perfil = %s', (perfilElegido,))
+                                cur.execute('SELECT codigo_contenido FROM visto WHERE nombre_perfil = %s',
+                                            (perfilElegido,))
                                 contenidoVisto = cur.fetchall()
                                 for contenido in contenidoVisto:
-                                    print (contenido[0])
+                                    print(contenido[0])
                                 while True:
-                                    
+
                                     print("\n[1] Ver Visualizacion\n"
                                           "[2] Agregar Visualizacion\n"
                                           "[3] Eliminar Visualizacion\n")
-                                    
+
                                     opcion = input("Que deseas hacer: ")
-                                    
+
                                     try:
                                         valopcion = int(opcion)
-                                        
-                                        if (valopcion==1):
+
+                                        if (valopcion == 1):
                                             visualizacion = input("Elija una visualizacion: ")
-                                            cur.execute('SELECT fecha, hora, etapa FROM visto WHERE codigo_contenido=%s',(visualizacion,))
+                                            cur.execute(
+                                                'SELECT fecha, hora, etapa FROM visto WHERE codigo_contenido=%s',
+                                                (visualizacion,))
                                             datosContenido = cur.fetchone()
-                                            print ("Se vio el contenido el " + datosContenido[0], 
-                                                    "a las " + datosContenido[1], 
-                                                    "\nSu estado es: " + datosContenido[2])
+                                            print("Se vio el contenido el " + datosContenido[0],
+                                                  "a las " + datosContenido[1],
+                                                  "\nSu estado es: " + datosContenido[2])
                                             break
-                                        
-                                        elif (valopcion==2):
+
+                                        elif (valopcion == 2):
                                             cur.execute('SELECT codigo FROM contenido')
                                             contenidoTotal = cur.fetchall()
                                             for contenido in contenidoTotal:
-                                                print (contenido[0])    
+                                                print(contenido[0])
                                             while True:
                                                 agregarCont = input("Elija un contenido: ")
                                                 fechaAgr = input("Inserte la fecha de visualizacion: ")
                                                 horaAgr = input("Inserte la hora de visualizacion: ")
                                                 while True:
                                                     etapaAgr = input("Inserte la estado del contenido: ")
-                                                    if (etapaAgr=="Finalizado" or etapaAgr=="Parcial"):
+                                                    if (etapaAgr == "Finalizado" or etapaAgr == "Parcial"):
                                                         break
                                                     else:
-                                                        print ("El estado ingresado no existe (Solo se puede colocar Finalizado o Parcial), intente nuevamente: ")
+                                                        print(
+                                                            "El estado ingresado no existe (Solo se puede colocar Finalizado o Parcial), intente nuevamente: ")
                                                         continue
-                                                cur.execute('SELECT codigo_contenido FROM visto WHERE codigo_contenido=%s AND nombre_perfil=%s AND fecha=%s AND hora=%s AND etapa=%s'
-                                                            , (agregarCont,perfilElegido, fechaAgr, horaAgr, etapaAgr))
+                                                cur.execute(
+                                                    'SELECT codigo_contenido FROM visto WHERE codigo_contenido=%s AND nombre_perfil=%s AND fecha=%s AND hora=%s AND etapa=%s'
+                                                    , (agregarCont, perfilElegido, fechaAgr, horaAgr, etapaAgr))
                                                 verificarCodigo = cur.fetchone()
                                                 if (verificarCodigo == None):
-                                                    cur.execute('INSERT INTO visto(codigo_contenido, nombre_perfil, fecha, hora, etapa)'
-                                                                'VALUES(%s,%s,%s,%s,%s)',
-                                                                (agregarCont, perfilElegido, fechaAgr, horaAgr, etapaAgr))
+                                                    cur.execute(
+                                                        'INSERT INTO visto(codigo_contenido, nombre_perfil, fecha, hora, etapa)'
+                                                        'VALUES(%s,%s,%s,%s,%s)',
+                                                        (agregarCont, perfilElegido, fechaAgr, horaAgr, etapaAgr))
                                                     conn.commit()
                                                     print("\nEL contenido ha sido agregado con exito\n")
                                                     break
                                                 else:
-                                                    print ("El contenido con esos datos ingresados ya existe, volvera al menu anterior\n")
+                                                    print(
+                                                        "El contenido con esos datos ingresados ya existe, volvera al menu anterior\n")
                                                     break
                                             break
-                                        
-                                        elif (valopcion==3):
-                                            eliminarVisualizacion = input("Ingrese visualizacion que desee eliminar: ")                                           
+
+                                        elif (valopcion == 3):
+                                            eliminarVisualizacion = input("Ingrese visualizacion que desee eliminar: ")
                                             while True:
-                                                confirmador = input("Esta seguro?"
+                                                confirmador = input("Esta seguro?\n"
                                                                     "[1] Si\n"
                                                                     "[2] No\n"
                                                                     "Ingrese su respuesta: ")
                                                 try:
                                                     confirmadorint = int(confirmador)
                                                     if (confirmadorint == 1):
-                                                        cur.execute('DELETE FROM visto WHERE codigo_contenido=%s',(eliminarVisualizacion,))
+                                                        cur.execute('DELETE FROM visto WHERE codigo_contenido=%s',
+                                                                    (eliminarVisualizacion,))
                                                         conn.commit()
-                                                        print ("Se ha borrado la visualizacion y toda su informacion correctamente.")
+                                                        print(
+                                                            "Se ha borrado la visualizacion y toda su informacion correctamente.")
                                                         break
                                                     else:
                                                         break
                                                 except ValueError:
                                                     print("\nLa opcion ingresada no es valida, intentalo denuevo\n")
                                                     continue
-                                                    
+
                                             break
                                     except ValueError:
                                         print("La opcion ingresada no es valida, intentalo nuevamente\n")
                                         continue
                                 continue
-                                
 
                             elif (valEleccion==2):
                                 continue
+
                             elif(valEleccion==3):
+                                cur.execute('SELECT codigo_contenido FROM favoritos WHERE nombre_perfil=%s',
+                                            (perfilElegido,))
+                                favoritos=cur.fetchall()
+
+                                print("Los contenidos favoritos de este perfil son:")
+                                for favorito in favoritos:
+                                    print(favorito[0])
+
+                                while True:
+                                    print('\n[1] Agregar Favorito\n'
+                                          '[2] Eliminar Favorito\n')
+
+                                    eleccionFav=input('Que deseas hacer: ')
+
+                                    try:
+                                        eleccionFav=int(eleccionFav)
+
+                                        if eleccionFav==1:
+                                            cur.execute('SELECT c.codigo FROM contenido c WHERE c.codigo NOT IN (SELECT f.codigo_contenido FROM Favoritos f WHERE f.nombre_perfil=%s)',
+                                                        (perfilElegido,))
+                                            noFavoritos= cur.fetchall()
+
+                                            while True:
+                                                print("Todo los contenidos que no tienes en tus favoritos son: ")
+                                                lista=[]
+
+                                                for nofavorito in noFavoritos:
+                                                    lista.append(nofavorito[0])
+                                                    print(nofavorito[0])
+
+                                                favoritoNuevo= input("\nCual deseas ingresar a tu lista de favoritos:  ")
+
+                                                if favoritoNuevo in lista:
+                                                    cur.execute('INSERT INTO Favoritos(nombre_perfil,codigo_contenido)'
+                                                                'VALUES (%s,%s)',(perfilElegido,favoritoNuevo))
+                                                    conn.commit()
+                                                    print("Se ha agregado con exito tu nuevo favorito\n")
+                                                    break
+                                                else:
+                                                    print("El contenido que ingresaste ya esta en tu lista de favoritos o no existe, intentalo nuevamente\n")
+                                                    continue
+
+                                        elif eleccionFav==2:
+
+                                            while True:
+                                                cur.execute('SELECT codigo_contenido FROM favoritos WHERE nombre_perfil=%s',
+                                                            (perfilElegido,))
+                                                favoritos = cur.fetchall()
+
+                                                print("Los contenidos favoritos de este perfil son:")
+                                                lista2=[]
+                                                for favorito in favoritos:
+                                                    lista2.append(favorito[0])
+                                                    print(favorito[0])
+
+                                                eliminarFav=input("Cual de estos contenidos deseas eliminar de tu lista de contenidos: ")
+
+                                                if eliminarFav in lista2:
+                                                    cur.execute('DELETE FROM favoritos WHERE nombre_perfil=%s AND codigo_contenido=%s',
+                                                                (perfilElegido,eliminarFav))
+                                                    conn.commit()
+                                                    print("Se ha eliminado con exito el contenido de tu lista de favoritos\n")
+                                                    break
+                                                else:
+                                                    print("El contenido que quieres borrar no se encuentra en tu lista de favoritos, intentalo denuevo\n")
+                                                    continue
+
+                                    except ValueError:
+                                        print("La opcion ingresada no es valida, intentalo nuevamente")
+                                        continue
+                                    break
                                 continue
+
                             elif(valEleccion==4):
                                 continue
                             elif(valEleccion==5):
@@ -165,26 +247,48 @@ while True:
                                         break
 
                                     elif(valAccion==2):
-
-                                        nombrePerfil= input("Ingrese el nombre de su nuevo perfil: ")
-
                                         while True:
-                                            edad= input("Ingrese su edad")
-                                            try:
-                                                edad=int(edad)
+                                            nombrePerfil= input("Ingrese el nombre de su nuevo perfil: ")
+
+                                            while True:
+                                                edad= input("Ingrese su edad")
+                                                try:
+                                                    edad=int(edad)
+                                                    break
+
+                                                except ValueError:
+                                                    print("Tienes que ingresar numeros")
+                                                    continue
+
+                                            cur.execute(
+                                                'SELECT exists (SELECT 1 FROM Perfiles WHERE nombreperfil = %s AND Existe=%s LIMIT 1)',
+                                                (nombrePerfil, noExiste))
+                                            validacion = cur.fetchone()
+
+                                            if validacion[0]==True:
+                                                cur.execute('UPDATE Perfiles SET Existe=%s WHERE nombreperfil=%s',(existe,nombrePerfil))
+                                                print('\nYa existia un perfil con este nombre pero hania sido eliminado ')
                                                 break
 
-                                            except ValueError:
-                                                print("Tienes que ingresar numeros")
+                                            cur.execute('SELECT exists (SELECT 1 FROM Perfiles WHERE nombreperfil = %s AND Existe=%s LIMIT 1)',
+                                                (nombrePerfil,existe ))
+                                            validacion2 = cur.fetchone()
+
+                                            if validacion2[0]==True:
+                                                print("\nYa existe un perfil con este nombre, intentalo nuevamente\n")
                                                 continue
 
-                                        cur.execute(
-                                            'INSERT INTO Perfiles(nombreperfil,idusuario,edad)'
-                                            'VALUES (%s,%s,%s)',(nombrePerfil,usuario,edad))
-                                        conn.commit()
-                                        print("\nEl perfil ha sido creado con exito!!!!\n")
-                                        continue
+                                            cur.execute('SELECT exists (SELECT 1 FROM Perfiles WHERE nombreperfil = %s  LIMIT 1)',
+                                                        (nombrePerfil,))
+                                            validacion3=cur.fetchone()
 
+                                            if validacion3[0]==False:
+                                                cur.execute(
+                                                    'INSERT INTO Perfiles(nombreperfil,idusuario,edad,existe)'
+                                                    'VALUES (%s,%s,%s,%s)', (nombrePerfil, usuario, edad, existe))
+                                                conn.commit()
+                                                print("\nEl perfil ha sido creado con exito!!!!\n")
+                                                break
 
                                     elif(valAccion==3):
                                         nuevoNombrePerfil=input("Ingresa el nuevo nombre de este perfil: ")
@@ -194,7 +298,7 @@ while True:
                                                 nuevaEdad=int(nuevaEdad)
                                                 break
                                             except ValueError:
-                                                print("Igresa una edad valida!\n")
+                                                print("Ingresa una edad valida!\n")
                                                 continue
 
                                         cur.execute('UPDATE Perfiles SET nombreperfil=%s WHERE nombreperfil=%s AND idusuario=%s',
@@ -214,17 +318,18 @@ while True:
                                                             "Cual es tu respuesta ( no hay marcha atras ): ")
                                             try:
                                                 respuesta=int(respuesta)
+
                                                 if respuesta==1:
                                                     cur.execute('DELETE FROM Historial WHERE nombre_perfil=%s',(perfilElegido,))
                                                     conn.commit()
                                                     cur.execute('DELETE FROM Favoritos WHERE nombre_perfil=%s',(perfilElegido,))
                                                     conn.commit()
-                                                    cur.execute('DELETE FROM Perfiles WHERE nombreperfil=%s ',
-                                                                (perfilElegido,))
+                                                    cur.execute('UPDATE Perfiles SET Existe=%s WHERE nombreperfil=%s ',
+                                                                (noExiste,perfilElegido))
                                                     conn.commit()
 
-                                                    print("Se ha borrado con exito la informacion y las acciones del perfil")
-                                                    continue
+                                                    print("\nSe ha borrado con exito la informacion y las acciones del perfil")
+                                                    break
                                                 else:
                                                     break
                                             except ValueError:
@@ -236,7 +341,6 @@ while True:
                                     print("\nLa opcion ingresada no es valida, intentalo nuevamente\n")
 
                             elif (valEleccion == 6):
-                                input("\nPresiona ENTER para volver al menu principal\n")
                                 break
 
                             else:
